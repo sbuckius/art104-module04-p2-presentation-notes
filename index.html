@@ -462,6 +462,7 @@ main{max-width:860px;margin:0 auto;padding:44px 24px 150px}
         <div><div class="snum" id="stStudents">0</div><div class="slbl">Students</div></div>
         <div><div class="snum" id="stPres">7</div><div class="slbl">Presentations</div></div>
       </div>
+      <div id="clearErr" style="display:none;color:#ff6b6b;font-size:11px;font-family:'DM Mono',monospace;max-width:400px;word-break:break-word;margin-bottom:8px;background:rgba(192,57,43,.15);padding:10px 14px;border-radius:3px;border:1px solid #c0392b"></div>
       <button onclick="doClear()" style="background:none;border:2px solid #c0392b;color:#e74c3c;padding:11px 24px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:1px;text-transform:uppercase" onmouseover="this.style.background='#c0392b';this.style.color='white'" onmouseout="this.style.background='none';this.style.color='#e74c3c'">🗑 Reset All Responses</button>
     </div>
   </div>
@@ -536,7 +537,7 @@ document.dispatchEvent(new Event('fb-ready'));
 </script>
 
 <script>
-// ── STATE ──
+// -- STATE --
 var user='', admin=false, adminPwd='teacher123';
 var pres=['Presentation 1','Presentation 2','Presentation 3','Presentation 4','Presentation 5','Presentation 6','Presentation 7'];
 var done=new Set(), live={}, kills=[];
@@ -546,7 +547,7 @@ var pendingRestore=false;
 var POS=['Something that I loved about this project','Something that is working well','Something about the concept that is interesting','Something about the formal aspects of the work that I find interesting'];
 var CON=['A suggestion for the formal aspects of the work','A suggestion for the conceptual aspects of the work','An idea to push the project further','An idea to expand the project','A suggested revision to the project'];
 
-// ── DRAFT STORAGE KEY ──
+// -- DRAFT STORAGE KEY --
 function draftKey(name){ return 'pr_p2_draft_'+name.toLowerCase().replace(/\s+/g,'_'); }
 
 function saveDraft(){
@@ -567,7 +568,7 @@ function clearDraft(name){
   try{localStorage.removeItem(draftKey(name))}catch(e){}
 }
 
-// ── RESTORE UI ──
+// -- RESTORE UI --
 function checkRestore(){
   var n=$id('sName').value.trim();
   var box=$id('restoreBox');
@@ -612,8 +613,8 @@ function applyDraft(draft){
     var card=$id('card-'+i);
     if(card){
       card.classList.add('done-card');
-      var bdg=$id('bdg-'+i);if(bdg){bdg.textContent='✓ Submitted';bdg.classList.add('ok')}
-      var act=$id('act-'+i);if(act)act.innerHTML='<div class="done-label">✓ Submitted</div>';
+      var bdg=$id('bdg-'+i);if(bdg){bdg.textContent='\u2713 Submitted';bdg.classList.add('ok')}
+      var act=$id('act-'+i);if(act)act.innerHTML='<div class="done-label">&#x2713; Submitted</div>';
       ['s1-'+i,'t1-'+i,'s2-'+i,'t2-'+i].forEach(function(id){var el=$id(id);if(el)el.disabled=true});
     }
   });
@@ -645,15 +646,15 @@ function showAutosaveNote(msg){
   });
 }
 
-// ── HELPERS ──
+// -- HELPERS --
 function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function pad(n){return String(n).padStart(2,'0')}
-function tag(t){var m={'Something that I loved about this project':'Loved','Something that is working well':'Working','Something about the concept that is interesting':'Concept','Something about the formal aspects of the work that I find interesting':'Formal','A suggestion for the formal aspects of the work':'Formal↑','A suggestion for the conceptual aspects of the work':'Concept↑','An idea to push the project further':'Push','An idea to expand the project':'Expand','A suggested revision to the project':'Revise'};return m[t]||(t?t.slice(0,8):'–')}
+function tag(t){var m={'Something that I loved about this project':'Loved','Something that is working well':'Working','Something about the concept that is interesting':'Concept','Something about the formal aspects of the work that I find interesting':'Formal','A suggestion for the formal aspects of the work':'Formal+','A suggestion for the conceptual aspects of the work':'Concept+','An idea to push the project further':'Push','An idea to expand the project':'Expand','A suggested revision to the project':'Revise'};return m[t]||(t?t.slice(0,8):'-')}
 function col(i){return window._col(window._db,'presentations/'+i+'/responses')}
 function cfgRef(){return window._doc(window._db,'config','app')}
 function $id(id){return document.getElementById(id)}
 
-// ── SCREENS ──
+// -- SCREENS --
 function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});$id(id).classList.add('active')}
 function switchTab(t){
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',(i===0&&t==='s')||(i===1&&t==='a'))});
@@ -671,7 +672,7 @@ async function loadCfg(){
 async function goStudent(skipRestoreCheck){
   var n=$id('sName').value.trim();
   if(!n){$id('sErr').textContent='Please enter your name.';return}
-  if(!window._fbOK){alert('Firebase loading, please wait…');return}
+  if(!window._fbOK){alert('Firebase loading, please wait...');return}
   await loadCfg();
   user=n;admin=false;
   $id('navName').textContent=n;
@@ -685,7 +686,7 @@ async function goStudent(skipRestoreCheck){
 
 async function goAdmin(){
   var p=$id('aPwd').value;
-  if(!window._fbOK){alert('Firebase loading, please wait…');return}
+  if(!window._fbOK){alert('Firebase loading, please wait...');return}
   await loadCfg();
   if(p!==adminPwd){$id('aErr').textContent='Incorrect password.';$id('aPwd').value='';return}
   user='Instructor';admin=true;
@@ -706,7 +707,7 @@ function signOut(){
   show('setupScreen');
 }
 
-// ── CARDS ──
+// -- CARDS --
 function buildCards(){
   var c=$id('presContainer');c.innerHTML='';
   pres.forEach(function(t,i){c.appendChild(makeCard(i,t))});
@@ -724,23 +725,23 @@ function makeCard(i,title){
       '<div class="pres-num">'+pad(i+1)+'</div>' +
       '<div class="pres-meta"><div class="pres-sub">Presentation '+(i+1)+'</div><div class="pres-title">'+x(title)+'</div></div>' +
       '<div class="badge" id="bdg-'+i+'">Not started</div>' +
-      '<div class="chev" id="chv-'+i+'">▸</div>' +
+      '<div class="chev" id="chv-'+i+'">&#9656;</div>' +
     '</div>' +
     '<div class="pres-body" id="body-'+i+'">' +
       '<div class="autosave-note" id="asn-'+i+'"></div>'+
       '<div class="section"><div class="section-label pos">Positive Observation</div>' +
         '<div class="bullet-row">' +
-          '<select class="bselect" id="s1-'+i+'" onchange="onDraftChange('+i+')"><option value="">— Choose type —</option>'+po+'</select>' +
-          '<textarea class="btextarea" id="t1-'+i+'" placeholder="Write your observation…" rows="2" oninput="onDraftChange('+i+')"></textarea>' +
+          '<select class="bselect" id="s1-'+i+'" onchange="onDraftChange('+i+')"><option value="">-- Choose type --</option>'+po+'</select>' +
+          '<textarea class="btextarea" id="t1-'+i+'" placeholder="Write your observation..." rows="2" oninput="onDraftChange('+i+')"></textarea>' +
         '</div></div>' +
       '<div class="section"><div class="section-label con">Constructive Suggestion</div>' +
         '<div class="bullet-row">' +
-          '<select class="bselect" id="s2-'+i+'" onchange="onDraftChange('+i+')"><option value="">— Choose type —</option>'+co+'</select>' +
-          '<textarea class="btextarea" id="t2-'+i+'" placeholder="Write your suggestion…" rows="2" oninput="onDraftChange('+i+')"></textarea>' +
+          '<select class="bselect" id="s2-'+i+'" onchange="onDraftChange('+i+')"><option value="">-- Choose type --</option>'+co+'</select>' +
+          '<textarea class="btextarea" id="t2-'+i+'" placeholder="Write your suggestion..." rows="2" oninput="onDraftChange('+i+')"></textarea>' +
         '</div></div>' +
-      '<div class="card-actions" id="act-'+i+'"><button class="btn-submit" onclick="submitCard('+i+')">Submit Review ✓</button></div>' +
+      '<div class="card-actions" id="act-'+i+'"><button class="btn-submit" onclick="submitCard('+i+')">Submit Review &#x2713;</button></div>' +
       '<div class="live-sec"><div class="live-lbl"><div class="live-dot"></div> Live Responses</div>' +
-        '<div class="live-list" id="liv-'+i+'"><div class="live-empty">No responses yet…</div></div>' +
+        '<div class="live-list" id="liv-'+i+'"><div class="live-empty">No responses yet...</div></div>' +
       '</div>' +
     '</div>';
   return d;
@@ -758,10 +759,10 @@ function onDraftChange(i){
 function togCard(i){
   var b=$id('body-'+i),c=$id('chv-'+i),open=b.classList.contains('open');
   document.querySelectorAll('.pres-body').forEach(function(el){el.classList.remove('open')});
-  document.querySelectorAll('.chev').forEach(function(el){el.textContent='▸';el.classList.remove('open')});
-  if(!open){b.classList.add('open');c.textContent='▾';c.classList.add('open')}
+  document.querySelectorAll('.chev').forEach(function(el){el.textContent='&#9656;';el.classList.remove('open')});
+  if(!open){b.classList.add('open');c.textContent='&#9662;';c.classList.add('open')}
 }
-function openCard(i){var b=$id('body-'+i),c=$id('chv-'+i);if(b&&c){b.classList.add('open');c.textContent='▾';c.classList.add('open')}}
+function openCard(i){var b=$id('body-'+i),c=$id('chv-'+i);if(b&&c){b.classList.add('open');c.textContent='&#9662;';c.classList.add('open')}}
 
 async function submitCard(i){
   var b1t=$id('s1-'+i).value.trim();
@@ -773,8 +774,8 @@ async function submitCard(i){
     await window._add(col(i),{name:user,b1type:b1t,b1text:b1,b2type:b2t,b2text:b2,ts:window._ts()});
     done.add(i);
     var card=$id('card-'+i);card.classList.remove('draft-card');card.classList.add('done-card');
-    $id('bdg-'+i).textContent='✓ Submitted';$id('bdg-'+i).classList.remove('draft');$id('bdg-'+i).classList.add('ok');
-    $id('act-'+i).innerHTML='<div class="done-label">✓ Submitted</div>';
+    $id('bdg-'+i).textContent='Submitted';$id('bdg-'+i).classList.remove('draft');$id('bdg-'+i).classList.add('ok');
+    $id('act-'+i).innerHTML='<div class="done-label">&#x2713; Submitted</div>';
     ['s1-'+i,'t1-'+i,'s2-'+i,'t2-'+i].forEach(function(id){var el=$id(id);if(el)el.disabled=true});
     saveDraft();
     updateProg();
@@ -790,7 +791,7 @@ function updateProg(){
   var bar=$id('minBar'),cnt=$id('minCount'),txt=$id('minTxt'),btn=$id('pdfBtn');
   if(n>=5){
     bar.style.borderTopColor='var(--yolk)';cnt.style.color='#6fcf6f';
-    cnt.textContent='✓ '+n+' reviewed — minimum met!';
+    cnt.textContent='\u2713 '+n+' reviewed -- minimum met!';
     txt.innerHTML=n>=tot?'<strong style="color:#6fcf6f">All '+tot+' presentations reviewed!</strong>':'<span style="color:#777">Minimum met! Keep going or you\'re done.</span>';
     if(btn)btn.style.display='inline-block';
   }else{
@@ -801,7 +802,7 @@ function updateProg(){
   }
 }
 
-// ── SUBSCRIPTIONS ──
+// -- SUBSCRIPTIONS --
 function subAll(){
   pres.forEach(function(_,i){
     var q=window._q(col(i),window._ord('ts','asc'));
@@ -816,7 +817,7 @@ function subAll(){
 
 function renderLive(i,rows){
   var el=$id('liv-'+i);if(!el)return;
-  if(!rows||!rows.length){el.innerHTML='<div class="live-empty">No responses yet…</div>';return}
+  if(!rows||!rows.length){el.innerHTML='<div class="live-empty">No responses yet...</div>';return}
   el.innerHTML=rows.map(function(r){
     return'<div class="live-item"><div class="live-author">'+x(r.name)+'</div>' +
       '<div class="live-bullet"><span class="ltag tp">'+tag(r.b1type)+'</span><span>'+x(r.b1text)+'</span></div>' +
@@ -824,7 +825,7 @@ function renderLive(i,rows){
   }).join('');
 }
 
-// ── ADMIN ──
+// -- ADMIN --
 function aTab(t){
   ['byPres','all','settings'].forEach(function(s){$id('tab-'+s).style.display=s===t?'block':'none'});
   document.querySelectorAll('.atab').forEach(function(b,i){b.classList.toggle('active',['byPres','all','settings'][i]===t)});
@@ -876,7 +877,7 @@ function renderEditList(){
   var list=$id('editList');list.innerHTML='';
   pres.forEach(function(t,i){
     var row=document.createElement('div');row.className='erow';
-    row.innerHTML='<div class="enum">'+(i+1)+'</div><input class="einput" id="ep-'+i+'" type="text" value="'+x(t)+'" placeholder="Title"/><button class="btn-rm" onclick="removeRow('+i+')">✕</button>';
+    row.innerHTML='<div class="enum">'+(i+1)+'</div><input class="einput" id="ep-'+i+'" type="text" value="'+x(t)+'" placeholder="Title"/><button class="btn-rm" onclick="removeRow('+i+')">x</button>';
     list.appendChild(row);
   });
 }
@@ -897,45 +898,47 @@ async function doChangePwd(){
   try{await window._set(cfgRef(),{presentations:pres,adminPassword:adminPwd});m.style.color='green';m.textContent='Updated!';$id('p1').value='';$id('p2').value=''}catch(e){m.style.color='var(--ember)';m.textContent='Error: '+e.message}
 }
 
-// ── doClear: delete all responses via Firebase SDK ──
+// -- doClear: delete all responses via Firebase SDK --
+function showClearErr(msg){
+  var el=document.getElementById('clearErr');
+  if(el){el.innerHTML=msg;el.style.display='block';}
+  else{alert(msg);}
+}
 async function doClear(){
+  var errEl=document.getElementById('clearErr');
+  if(errEl)errEl.style.display='none';
+  if(!window._db){showClearErr('ERROR: Firebase not ready. Wait a moment and try again.');return;}
+  if(typeof window._getDocs!=='function'){showClearErr('ERROR: _getDocs missing -- Firebase module did not load correctly.');return;}
+  if(typeof window._deleteDoc!=='function'){showClearErr('ERROR: _deleteDoc missing -- Firebase module did not load correctly.');return;}
   if(!confirm('Delete ALL responses? This cannot be undone.'))return;
-  var deleted=0, errors=[];
-  // sweep indices 0 to max to catch all presentation slots
-  var maxIdx=Math.max(pres.length, 20);
+  var deleted=0,errors=[];
+  var maxIdx=Math.max(pres.length,20);
   for(var i=0;i<maxIdx;i++){
     try{
       var colRef=window._col(window._db,'presentations/'+i+'/responses');
       var snap=await window._getDocs(colRef);
       if(snap.empty)continue;
       for(var j=0;j<snap.docs.length;j++){
-        try{
-          await window._deleteDoc(snap.docs[j].ref);
-          deleted++;
-        }catch(de){
-          console.error('delete doc error pres='+i+' doc='+snap.docs[j].id+':',de);
-          errors.push('pres '+i+': '+de.message);
-        }
+        try{await window._deleteDoc(snap.docs[j].ref);deleted++;}
+        catch(de){errors.push('pres '+i+' doc delete: '+de.message);}
       }
     }catch(ge){
-      // empty collection — skip silently
-      if(!ge.message||!ge.message.includes('permission'))continue;
-      console.error('getDocs error pres='+i+':',ge);
-      errors.push('get pres '+i+': '+ge.message);
+      if(ge.message&&ge.message.toLowerCase().includes('permission'))
+        errors.push('pres '+i+' read: '+ge.message);
     }
   }
-  live={};
-  renderByPres();renderAll();updateStats();
+  live={};renderByPres();renderAll();updateStats();
   if(errors.length){
-    alert('Deleted '+deleted+' response(s) but hit '+errors.length+' permission error(s).\n\nYou need to update your Firestore Security Rules.\n\nIn Firebase Console → Firestore → Rules, set:\n\nrules_version = \'2\'\nservice cloud.firestore {\n  match /databases/{db}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}');
+    showClearErr('Deleted '+deleted+' but errors: '+errors.slice(0,3).join(' | '));
   }else if(deleted===0){
-    alert('No responses found to delete (already empty, or check Firestore Rules allow deletes).');
+    showClearErr('Nothing deleted -- already empty, or data is stored under different paths. Open F12 Console and try again to see raw errors.');
   }else{
+    if(errEl)errEl.style.display='none';
     alert('Done! Deleted '+deleted+' response'+(deleted!==1?'s':'')+'.');
   }
 }
 
-// ── PDF EXPORT ──
+// -- PDF EXPORT --
 function exportPDF(){
   if(!window.jspdf){alert('PDF library not loaded yet, please try again.');return}
   var jsPDF=window.jspdf.jsPDF;
@@ -952,12 +955,12 @@ function exportPDF(){
   doc.setFillColor(139,26,26);doc.circle(PW-30,20,50,'F');
   doc.setFillColor(42,10,10);doc.rect(PW-90,0,90,96,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(245,200,0);
-  doc.text('ART 104 · MODULE 04 [P2] · REALITY: SPECULATIVE ARTWORK',L,26);
+  doc.text('ART 104 . MODULE 04 [P2] . REALITY: SPECULATIVE ARTWORK',L,26);
   doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(255,254,245);
   doc.text('Peer Review Notes',L,52);
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(160,140,90);
   var dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-  doc.text(user+' · '+dateStr,L,72);
+  doc.text(user+' . '+dateStr,L,72);
   y=116;
 
   pres.forEach(function(title,i){
@@ -1004,7 +1007,7 @@ function exportPDF(){
   for(var p=1;p<=total;p++){
     doc.setPage(p);
     doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(140,120,80);
-    doc.text(user+' · Peer Review Notes · Module 04 [P2]',L,PH-22);
+    doc.text(user+' . Peer Review Notes . Module 04 [P2]',L,PH-22);
     doc.text('Page '+p+' of '+total,PW/2,PH-22,{align:'center'});
     doc.text(dateStr,PW-R,PH-22,{align:'right'});
   }
