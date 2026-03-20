@@ -906,23 +906,27 @@ async function doChangePwd(){
 }
 async function doClear(){
   if(!confirm('Delete ALL responses? This cannot be undone.'))return;
+  var PROJECT='art104-module04-p2-pres-notes';
+  var API_KEY='AIzaSyCYtGZdTWisQC4XpaWziCMLWluTV_nvV7M';
+  var BASE='https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents';
   try{
-    console.log('doClear: starting, pres.length='+pres.length);
     var deleted=0;
     for(var i=0;i<pres.length;i++){
-      var colRef=window._col(window._db,'presentations/'+i+'/responses');
-      console.log('doClear: fetching collection presentations/'+i+'/responses');
-      var snap=await window._getDocs(colRef);
-      console.log('doClear: found '+snap.size+' docs in presentation '+i);
-      for(var j=0;j<snap.docs.length;j++){
-        await window._deleteDoc(snap.docs[j].ref);
-        deleted++;
-        console.log('doClear: deleted doc '+deleted);
+      // fetch all docs in this subcollection via REST
+      var url=BASE+'/presentations/'+i+'/responses?key='+API_KEY;
+      var res=await fetch(url);
+      var data=await res.json();
+      if(!data.documents)continue;
+      for(var j=0;j<data.documents.length;j++){
+        var docName=data.documents[j].name; // full resource name
+        var delUrl='https://firestore.googleapis.com/v1/'+docName+'?key='+API_KEY;
+        var delRes=await fetch(delUrl,{method:'DELETE'});
+        if(delRes.ok){deleted++;}
+        else{var e=await delRes.json();console.error('delete failed:',e);}
       }
     }
-    console.log('doClear: done, deleted '+deleted+' total');
     live={};renderByPres();renderAll();updateStats();
-    alert('Done! Deleted '+deleted+' responses.');
+    alert('Done! Deleted '+deleted+' response'+(deleted!==1?'s':'')+'.');
   }catch(e){
     console.error('doClear error:',e);
     alert('Error: '+e.message);
