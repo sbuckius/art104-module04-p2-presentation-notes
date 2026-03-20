@@ -529,6 +529,9 @@ const db  = getFirestore(app);
 window._db=db; window._col=collection; window._add=addDoc; window._snap=onSnapshot;
 window._q=query; window._ord=orderBy; window._ts=serverTimestamp;
 window._doc=doc; window._set=setDoc; window._del=deleteDoc; window._get=getDocs;
+// Expose a native-scoped delete helper to avoid cross-module instanceof issues
+window._deleteDoc=function(ref){return deleteDoc(ref);};
+window._getDocs=function(ref){return getDocs(ref);};
 window._fbOK=true;
 document.dispatchEvent(new Event('fb-ready'));
 </script>
@@ -904,9 +907,26 @@ async function doChangePwd(){
 async function doClear(){
   if(!confirm('Delete ALL responses? This cannot be undone.'))return;
   try{
-    for(var i=0;i<pres.length;i++){var s=await window._get(col(i));for(var j=0;j<s.docs.length;j++)await window._del(s.docs[j].ref)}
+    console.log('doClear: starting, pres.length='+pres.length);
+    var deleted=0;
+    for(var i=0;i<pres.length;i++){
+      var colRef=window._col(window._db,'presentations/'+i+'/responses');
+      console.log('doClear: fetching collection presentations/'+i+'/responses');
+      var snap=await window._getDocs(colRef);
+      console.log('doClear: found '+snap.size+' docs in presentation '+i);
+      for(var j=0;j<snap.docs.length;j++){
+        await window._deleteDoc(snap.docs[j].ref);
+        deleted++;
+        console.log('doClear: deleted doc '+deleted);
+      }
+    }
+    console.log('doClear: done, deleted '+deleted+' total');
     live={};renderByPres();renderAll();updateStats();
-  }catch(e){alert('Error: '+e.message)}
+    alert('Done! Deleted '+deleted+' responses.');
+  }catch(e){
+    console.error('doClear error:',e);
+    alert('Error: '+e.message);
+  }
 }
 
 // ── PDF EXPORT ──
