@@ -537,9 +537,6 @@ document.dispatchEvent(new Event('fb-ready'));
 </script>
 
 <script>
-// BOOT CHECK - if you see this in console, script is loading
-console.log('[PeerReview] Main script loading...');
-try {
 
 // -- STATE --
 var user='', admin=false, adminPwd='teacher123';
@@ -1025,16 +1022,6 @@ function doExport(){
   var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='peer_review_m04p2.csv';a.click();
 }
 
-console.log('[PeerReview] Main script loaded OK. doClear type:', typeof doClear);
-} catch(BOOT_ERR) {
-  console.error('[PeerReview] SCRIPT BOOT ERROR:', BOOT_ERR);
-  document.body.insertAdjacentHTML('afterbegin',
-    '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:white;padding:16px;font-family:monospace;font-size:13px;word-break:break-all">' +
-    '<strong>SCRIPT ERROR (this is why the button does nothing):</strong><br>' +
-    BOOT_ERR.toString() + '<br>' + (BOOT_ERR.stack||'') +
-    '</div>'
-  );
-}
 </script>
 </body>
 </html>
