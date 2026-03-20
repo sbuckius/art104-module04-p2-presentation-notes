@@ -30,7 +30,6 @@ body{background:var(--cream);color:var(--ink);font-family:'DM Mono',monospace;fo
   display:flex;min-height:100vh;align-items:center;justify-content:center;
   background:var(--ink);position:relative;overflow:hidden;
 }
-/* geometric bg elements */
 #setupScreen::before{
   content:'';position:absolute;
   width:520px;height:520px;border-radius:50%;
@@ -529,7 +528,7 @@ const db  = getFirestore(app);
 window._db=db; window._col=collection; window._add=addDoc; window._snap=onSnapshot;
 window._q=query; window._ord=orderBy; window._ts=serverTimestamp;
 window._doc=doc; window._set=setDoc; window._del=deleteDoc; window._get=getDocs;
-// Expose a native-scoped delete helper to avoid cross-module instanceof issues
+// Expose SDK-scoped helpers for cross-module use
 window._deleteDoc=function(ref){return deleteDoc(ref);};
 window._getDocs=function(ref){return getDocs(ref);};
 window._fbOK=true;
@@ -587,7 +586,6 @@ function restoreDraft(){
   if(!n)return;
   var draft=loadDraft(n);
   if(!draft)return;
-  // flag to apply after cards built
   window._pendingDraft=draft;
   goStudent(true);
 }
@@ -601,9 +599,7 @@ function discardDraft(){
 
 function applyDraft(draft){
   if(!draft||!draft.fields)return;
-  // restore done set
   if(draft.done)draft.done.forEach(function(i){done.add(parseInt(i))});
-  // restore field values
   Object.keys(draft.fields).forEach(function(i){
     var f=draft.fields[i];
     var s1=$id('s1-'+i),t1=$id('t1-'+i),s2=$id('s2-'+i),t2=$id('t2-'+i);
@@ -612,7 +608,6 @@ function applyDraft(draft){
     if(s2&&f.s2)s2.value=f.s2;
     if(t2&&f.t2){t2.value=f.t2;t2.classList.add('draft-glow')}
   });
-  // mark done cards visually
   done.forEach(function(i){
     var card=$id('card-'+i);
     if(card){
@@ -622,7 +617,6 @@ function applyDraft(draft){
       ['s1-'+i,'t1-'+i,'s2-'+i,'t2-'+i].forEach(function(id){var el=$id(id);if(el)el.disabled=true});
     }
   });
-  // mark draft (not submitted) cards
   pres.forEach(function(_,i){
     if(!done.has(i)){
       var f=draft.fields[i];
@@ -685,7 +679,6 @@ async function goStudent(skipRestoreCheck){
   $id('minBar').classList.add('on');
   show('studentApp');
   buildCards();
-  // apply pending draft if restore was chosen
   if(window._pendingDraft){applyDraft(window._pendingDraft);window._pendingDraft=null}
   subAll();
 }
@@ -754,7 +747,6 @@ function makeCard(i,title){
 }
 
 function onDraftChange(i){
-  // update draft badge
   var card=$id('card-'+i),bdg=$id('bdg-'+i);
   if(card&&!done.has(i)){
     card.classList.add('draft-card');
@@ -904,32 +896,42 @@ async function doChangePwd(){
   adminPwd=p1;
   try{await window._set(cfgRef(),{presentations:pres,adminPassword:adminPwd});m.style.color='green';m.textContent='Updated!';$id('p1').value='';$id('p2').value=''}catch(e){m.style.color='var(--ember)';m.textContent='Error: '+e.message}
 }
+
+// ── doClear: delete all responses via Firebase SDK ──
 async function doClear(){
   if(!confirm('Delete ALL responses? This cannot be undone.'))return;
-  var PROJECT='art104-module04-p2-pres-notes';
-  var API_KEY='AIzaSyCYtGZdTWisQC4XpaWziCMLWluTV_nvV7M';
-  var BASE='https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents';
-  try{
-    var deleted=0;
-    for(var i=0;i<pres.length;i++){
-      // fetch all docs in this subcollection via REST
-      var url=BASE+'/presentations/'+i+'/responses?key='+API_KEY;
-      var res=await fetch(url);
-      var data=await res.json();
-      if(!data.documents)continue;
-      for(var j=0;j<data.documents.length;j++){
-        var docName=data.documents[j].name; // full resource name
-        var delUrl='https://firestore.googleapis.com/v1/'+docName+'?key='+API_KEY;
-        var delRes=await fetch(delUrl,{method:'DELETE'});
-        if(delRes.ok){deleted++;}
-        else{var e=await delRes.json();console.error('delete failed:',e);}
+  var deleted=0, errors=[];
+  // sweep indices 0 to max to catch all presentation slots
+  var maxIdx=Math.max(pres.length, 20);
+  for(var i=0;i<maxIdx;i++){
+    try{
+      var colRef=window._col(window._db,'presentations/'+i+'/responses');
+      var snap=await window._getDocs(colRef);
+      if(snap.empty)continue;
+      for(var j=0;j<snap.docs.length;j++){
+        try{
+          await window._deleteDoc(snap.docs[j].ref);
+          deleted++;
+        }catch(de){
+          console.error('delete doc error pres='+i+' doc='+snap.docs[j].id+':',de);
+          errors.push('pres '+i+': '+de.message);
+        }
       }
+    }catch(ge){
+      // empty collection — skip silently
+      if(!ge.message||!ge.message.includes('permission'))continue;
+      console.error('getDocs error pres='+i+':',ge);
+      errors.push('get pres '+i+': '+ge.message);
     }
-    live={};renderByPres();renderAll();updateStats();
+  }
+  live={};
+  renderByPres();renderAll();updateStats();
+  if(errors.length){
+    alert('Deleted '+deleted+' response(s) but hit '+errors.length+' permission error(s).\n\nYou need to update your Firestore Security Rules.\n\nIn Firebase Console → Firestore → Rules, set:\n\nrules_version = \'2\'\nservice cloud.firestore {\n  match /databases/{db}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}');
+  }else if(deleted===0){
+    alert('No responses found to delete (already empty, or check Firestore Rules allow deletes).');
+  }else{
     alert('Done! Deleted '+deleted+' response'+(deleted!==1?'s':'')+'.');
-  }catch(e){
-    console.error('doClear error:',e);
-    alert('Error: '+e.message);
   }
 }
 
